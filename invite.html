@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Special Invitation!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        /* Use the cute 'Gaegu' font for the entire page */
+        body {
+            font-family: 'Gaegu', cursive;
+            transition: background-color 0.8s ease;
+        }
+        /* Styling for the cat image to make it pop */
+        #catImage {
+            cursor: pointer;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            transition: transform 0.1s ease;
+            user-select: none; /* Prevents image selection on double-click */
+            -webkit-user-select: none; /* For Safari */
+        }
+        /* A little "bop" effect when the cat is tapped */
+        #catImage:active {
+            transform: scale(0.95);
+        }
+        /* Hide elements by default */
+        .hidden {
+            display: none;
+        }
+        /* Confetti container */
+        .confetti-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none; /* Allows clicks to go through to elements behind it */
+            overflow: hidden;
+            z-index: 10;
+        }
+        /* Individual confetti piece styling */
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 20px;
+            background-color: #f00;
+            opacity: 0.7;
+            animation: fall 5s linear infinite;
+        }
+        /* Keyframe animation for falling confetti */
+        @keyframes fall {
+            0% {
+                transform: translateY(-10vh) rotate(0deg);
+            }
+            100% {
+                transform: translateY(110vh) rotate(720deg);
+            }
+        }
+    </style>
+</head>
+<body id="mainBody" class="bg-black flex items-center justify-center min-h-screen">
+
+    <!-- This is the initial screen with the cat to tap -->
+    <div id="startScreen" class="text-center p-4">
+        <h1 id="mainHeading" class="text-white text-3xl md:text-5xl mb-4">Why u guys here!!</h1>
+        <p class="text-gray-400 text-xl md:text-2xl mb-8">Tap the cat!</p>
+        <img id="catImage" 
+             src="./images/0.jpg" 
+             alt="A cute cat"
+             width="300"
+             height="300"
+             onerror="this.onerror=null;this.src='https://placehold.co/300x300/1a1a1a/ffffff?text=Image+not+found';">
+        <p id="tapCounter" class="text-white text-2xl mt-6">Taps: 0</p>
+    </div>
+
+    <!-- This is the final invitation screen, hidden at first -->
+    <div id="partyScreen" class="hidden text-center p-8 max-w-2xl mx-auto relative z-20">
+        <img id="finalCat" 
+             src="./images/11.jpg" 
+             alt="A happy party cat"
+             width="200"
+             height="200"
+             class="mx-auto mb-6 rounded-full border-4 border-white shadow-lg"
+             onerror="this.onerror=null;this.src='https://placehold.co/200x200/ffcc00/000000?text=Yay!';">
+        <h2 class="text-4xl md:text-6xl font-bold text-gray-800 mb-4">You're Cordially Invited!</h2>
+        <p class="text-xl md:text-2xl text-gray-700 mb-6">
+            ...to a party that has been possible only because of you people. Koti koti thank you & I wish sabka intern jaldi jaldi lag jaye!
+        </p>
+        <div class="bg-white/70 backdrop-blur-sm p-6 rounded-2xl shadow-inner">
+            <h3 class="text-2xl md:text-3xl font-bold text-gray-800 mb-2">The Details</h3>
+            <p class="text-lg md:text-xl text-gray-600"><strong>When:</strong> You guys decide (august mehi karte hai commsoc ke baad)</p>
+            <p class="text-lg md:text-xl text-gray-600"><strong>Where:</strong> You guys decide (koi aisa cafe ho jisme ingredients provide kare aur mai bna ke khilau)</p>
+            <p class="text-lg md:text-xl text-gray-600"><strong>What:</strong> Aameya - pls wo white pants and black shirt<br>
+                Asmi - wo red waali kurti and pls tell me kaunse flowers pasand hai<br>
+                and pls lumpsum budget bhi tell...mera first time</p>
+        </div>
+        <p class="mt-8 text-lg text-gray-600">Can't wait to celebrate with you guys lysmmmm!!</p>
+    </div>
+
+    <!-- Container for the CSS confetti -->
+    <div id="confettiZone" class="confetti-container"></div>
+
+    <script>
+        // --- DOM Elements ---
+        const catImage = document.getElementById('catImage');
+        const tapCounterDisplay = document.getElementById('tapCounter');
+        const startScreen = document.getElementById('startScreen');
+        const partyScreen = document.getElementById('partyScreen');
+        const mainBody = document.getElementById('mainBody');
+        const confettiZone = document.getElementById('confettiZone');
+        const mainHeading = document.getElementById('mainHeading'); // Get the heading element
+
+        // --- Game State ---
+        let tapCount = 0;
+        const tapsRequired = 11;
+
+        // --- Cat Images ---
+        // An array of different "cat" images to cycle through.
+        const catImages = [
+            './images/1.jpg', './images/2.jpg', './images/3.jpg', './images/4.jpg', './images/5.jpg',
+            './images/6.jpg', './images/7.jpg', './images/8.jpg', './images/9.jpg', './images/10.jpg'
+        ];
+
+        // --- Variable Texts ---
+        // An array of texts to show above the cat image.
+        const catTexts = [
+            "Don't open!!", "Stop Stop", "It's Bad!",
+            "statue plss", "maa pls nahi!!", "stop asmi stop!!",
+            "no aameya no!!", "no more taps", "kya hoga mera ab", "fine if you guys only watching this!"
+        ];
+
+        // --- Sound Synthesis ---
+        // Create a simple synth sound using Tone.js so we don't need audio files.
+        const synth = new Tone.Synth().toDestination();
+
+        // --- Event Listener ---
+        // This is the main logic that runs when the cat is clicked.
+        catImage.addEventListener('click', () => {
+            if (Tone.context.state !== 'running') {
+                Tone.start();
+            }
+
+            synth.triggerAttackRelease("C5", "8n");
+
+            // Check if the party should start
+            if (tapCount >= tapsRequired -1) {
+                revealParty();
+            } else {
+                // Increment tap count
+                tapCount++;
+                tapCounterDisplay.textContent = `Taps: ${tapCount}`;
+
+                // Update the image and text
+                if(catImages[tapCount]) {
+                    catImage.src = catImages[tapCount];
+                }
+                if(catTexts[tapCount - 1]) {
+                    mainHeading.textContent = catTexts[tapCount - 1];
+                }
+            }
+        });
+
+        // --- Main Functions ---
+        function revealParty() {
+            startScreen.classList.add('hidden');
+            mainBody.classList.remove('bg-black');
+            mainBody.classList.add('bg-yellow-300');
+            partyScreen.classList.remove('hidden');
+            createConfetti();
+            
+            synth.triggerAttackRelease("C5", "8n", Tone.now());
+            synth.triggerAttackRelease("E5", "8n", Tone.now() + 0.2);
+            synth.triggerAttackRelease("G5", "8n", Tone.now() + 0.4);
+        }
+
+        function createConfetti() {
+            const confettiCount = 100;
+            const colors = ['#f44336', '#e91e63', '#9c27b0', '#673ab7', '#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50', '#8bc34a', '#cddc39', '#ffeb3b', '#ffc107', '#ff9800'];
+
+            for (let i = 0; i < confettiCount; i++) {
+                const confettiPiece = document.createElement('div');
+                confettiPiece.classList.add('confetti');
+                
+                confettiPiece.style.left = `${Math.random() * 100}vw`;
+                confettiPiece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confettiPiece.style.animationDelay = `${Math.random() * 5}s`;
+                confettiPiece.style.transform = `scale(${Math.random() * 1.5 + 0.5})`;
+                confettiPiece.style.opacity = `${Math.random() * 0.5 + 0.5}`;
+
+                confettiZone.appendChild(confettiPiece);
+            }
+        }
+    </script>
+</body>
+</html>
